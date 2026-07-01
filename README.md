@@ -62,6 +62,18 @@ Search.query(scope, "Gulf", sources: [:trading_partners])
 Search.query(Scope.new(business_id: "acme", permissions: [:payments]), "INV-123")
 ```
 
+### Live indexing (write → event → searchable)
+
+A context write publishes a domain event on `Apex.EventBus`; the search
+`EventSubscriber` projects it into the index — the context never calls search.
+
+```elixir
+Apex.Billing.create_invoice(%{id: "inv_9", business_id: "acme",
+  number: "INV-9", partner_name: "Zephyr Trading", status: :draft})
+
+Search.query(scope, "Zephyr")   # the new invoice is now searchable (eventually)
+```
+
 ## What the tests prove
 
 | Behaviour | Where |
@@ -70,6 +82,7 @@ Search.query(Scope.new(business_id: "acme", permissions: [:payments]), "INV-123"
 | Permission redaction (omit-on-deny) | `search_test.exs`, `authorizer_test.exs` |
 | Exact-identifier ranking + recency tiebreak | `ranker_test.exs` |
 | Idempotent, apply-if-newer indexing + backfill | `index_in_memory_test.exs`, `indexer_test.exs` |
+| Live write → event → searchable (create/update/delete) | `event_flow_test.exs` |
 | Fail-safe partial results (degraded, not crashed) | `search_test.exs` |
 | Arabic/English normalisation | `normalizer_test.exs` |
 

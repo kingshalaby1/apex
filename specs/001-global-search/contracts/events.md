@@ -1,19 +1,29 @@
 # Contract: Domain-event → Indexer
 
-How source contexts keep the projection fresh. In production these are messages on
-a bus; in the skeleton they are function calls into the Indexer that model the same
-contract.
+How source contexts keep the projection fresh. Source contexts publish domain
+events on `Apex.EventBus` (a `Registry`-backed pub/sub); Discovery's
+`EventSubscriber` consumes them and calls the `Indexer`. The contexts never
+reference search.
 
-## Event shape (logical)
+## Event shapes
+
+**Published by a context** (domain event, per-source topic):
 
 ```elixir
-%{
-  type: :upsert | :delete,
-  source: atom(),            # e.g. :invoices
-  record: term() | nil,      # present for :upsert; the source's record
-  id: String.t() | nil       # present for :delete; namespaced document id
-}
+# topic: the source key, e.g. :invoices
+%{name: :created | :updated | :deleted, record: term()}
 ```
+
+**Consumed by the Indexer** (after the subscriber maps domain → index op):
+
+```elixir
+%{type: :upsert, source: atom(), record: term()}          # created / updated
+%{type: :delete, source: atom(), record: term()}          # deleted (id derived from record)
+%{type: :delete, id: String.t()}                          # deleted (by namespaced id)
+```
+
+The `EventSubscriber` is where `:created`/`:updated` become `:upsert` and
+`:deleted` becomes `:delete` — keeping the domain→index mapping on the search side.
 
 ## Indexer operations
 
@@ -32,8 +42,11 @@ contract.
 
 ## Mapping to real infrastructure (future)
 
-- Source contexts publish `InvoiceCreated`, `InvoicePaid`, `TradingPartnerAdded`,
-  `PaymentRequestStateChanged`, … onto a bus.
-- A durable subscriber translates each into an `apply(event)` call with retries and
-  a dead-letter path; `reindex` runs on deploy/backfill.
+- The skeleton's `Apex.EventBus` (Registry-backed, single node, async) becomes
+  `Phoenix.PubSub` or a durable broker behind the same `subscribe/2` + `publish/2`
+  wrapper — no caller changes.
+- The subscriber gains retries and a dead-letter path; `reindex`/`seed` run on
+  deploy/backfill.
+- Contexts emit richer domain events (`InvoicePaid`, `TradingPartnerVerified`, …);
+  the subscriber decides which map to upserts/deletes.
 - The Ledger is **not** a publisher to search in v1 (documented non-goal).

@@ -22,7 +22,8 @@ defmodule Apex.Discovery.Search.Indexer do
   @doc """
   Apply a change event to the index.
 
-  Events: `%{type: :upsert, source: key, record: record}` or
+  Events: `%{type: :upsert, source: key, record: record}`,
+  `%{type: :delete, source: key, record: record}`, or
   `%{type: :delete, id: namespaced_id}`.
   """
   @spec apply(map(), module()) :: :ok
@@ -32,6 +33,13 @@ defmodule Apex.Discovery.Search.Indexer do
     case Registry.module(key) do
       nil -> {:error, {:unknown_source, key}}
       mod -> InMemory.upsert(index, mod.to_document(record))
+    end
+  end
+
+  def apply(%{type: :delete, source: key, record: record}, index) do
+    case Registry.module(key) do
+      nil -> {:error, {:unknown_source, key}}
+      mod -> InMemory.delete(index, mod.to_document(record).id)
     end
   end
 

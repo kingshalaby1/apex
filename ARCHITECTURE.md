@@ -96,11 +96,13 @@ All under `lib/apex/discovery/search/`.
 | `Index.InMemory` | Skeleton index: supervised GenServer, apply-if-newer. |
 | `Registry` | `source_key => module` map of known sources. |
 | `Indexer` | Applies events (upsert/delete) and backfills (`reindex`, `seed`). |
+| `EventSubscriber` | Subscribes to source events; translates them into `Indexer` ops. |
 | `Normalizer` | Case/diacritics folding for Arabic/English. |
 | `Authorizer` | Tenant + permission filtering (omit-on-deny). |
 | `Ranker` | Pure scoring; exact identifiers first. |
 | `Grouper` | Bucket by source, fixed order, bounded. |
 | `Telemetry` | Observability seam (correlation id, query signal, audit). |
+| `Apex.EventBus` | Shared pub/sub (Registry-backed); contexts publish, search subscribes. |
 
 ## 5. Public contracts
 
@@ -136,21 +138,30 @@ sample-data mapping are in
 
 ## 7. Indexing flow
 
+Two paths keep the projection **fresh** (live events) and **complete/repairable**
+(backfill), both writing through the same idempotent upsert:
+
 ```
-Source context ──event──▶ Indexer.apply ──to_document──▶ Index.upsert (apply-if-newer)
-Source.fetch_all ──────── Indexer.reindex (backfill) ──▶ Index.upsert
+LIVE:   Context write ──publish──▶ EventBus ──(async)──▶ EventSubscriber
+                                                            └─ Indexer.apply ─▶ Index.upsert (apply-if-newer)
+BACKFILL: Source.fetch_all ──────── Indexer.reindex / seed ──────────────────▶ Index.upsert
 ```
 
+- **Live updates** — a context write (e.g. `Billing.create_invoice/1`) persists to
+  its store **and** publishes a domain event on `Apex.EventBus` (topic per source).
+  The `EventSubscriber` translates it (`:created`/`:updated` → upsert,
+  `:deleted` → delete) and calls `Indexer.apply/2`. The source context never
+  references Discovery — it only publishes.
 - **Initial indexing / backfill** — `Indexer.reindex(source, tenant)` pulls
   `fetch_all/1` and upserts each record. The skeleton seeds all sources for the
   sample tenants at startup (`Indexer.seed/0`).
-- **Updates / deletes** — `apply(%{type: :upsert|:delete, ...})`.
 - **Idempotency** — the namespaced `id` makes upserts non-duplicating; the
   `source_version` "apply-if-newer" guard makes them monotonic, so retries,
   out-of-order events and a backfill overlapping live events converge without
   regressing fresher state.
-- **Retries** — in production the event subscriber retries with a dead-letter path;
-  because writes are idempotent, retries are safe.
+- **Retries** — in production the subscriber retries with a dead-letter path;
+  because writes are idempotent, retries are safe. Delivery is asynchronous, so the
+  index is eventually consistent (Principle III).
 
 ## 8. Query flow
 

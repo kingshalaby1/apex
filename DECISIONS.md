@@ -75,6 +75,28 @@ and standing up Postgres (explicitly unnecessary to prove the design).
 (deferred) per-record ACLs — real, but a v2 concern that would need product/security
 input.
 
+### 9. Live indexing via an async pub/sub bus (contexts publish, search subscribes)
+
+**Decision.** Context writes (`Billing.create_invoice/1`, …) persist and **publish
+a domain event** on `Apex.EventBus`; a Discovery-side `EventSubscriber` consumes it
+and updates the index. The bus is a thin wrapper over Elixir's built-in `Registry`
+(`:duplicate`), delivering **asynchronously**.
+
+**Why.** The source context must never call the Indexer — that would couple Billing
+to Discovery. A bus owned by neither context is the decoupling seam (Principle I),
+and async delivery is honest to eventual consistency (Principle III). `Registry`
+keeps it dependency-free; the wrapper makes it swappable for `Phoenix.PubSub`.
+
+**Alternatives.** *Phoenix.PubSub* — the distributed production choice, but a
+dependency the brief steers away from (kept as the drop-in upgrade). *Synchronous
+dispatch* — simpler tests, but it would imply the write and index update are atomic,
+contradicting eventual consistency. *Direct call from context to Indexer* — rejected
+outright (couples the contexts).
+
+**Scope.** Wired end-to-end on Billing/invoices as the worked example (create /
+update / delete → searchable); the pattern generalises to the other contexts
+verbatim.
+
 ## Assumptions (confirm in production)
 
 - Scope (business + permissions) comes from the authenticated session, not the client.

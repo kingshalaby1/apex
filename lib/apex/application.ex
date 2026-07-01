@@ -5,13 +5,19 @@ defmodule Apex.Application do
 
   use Application
 
-  alias Apex.Discovery.Search.{Index.InMemory, Indexer}
+  alias Apex.Discovery.Search.{EventSubscriber, Index.InMemory, Indexer}
 
   @impl true
   def start(_type, _args) do
     children = [
+      # Domain-event bus (shared infrastructure, owned by no context).
+      {Registry, keys: :duplicate, name: Apex.EventBus.Registry},
+      # Billing's stateful invoice store (source of truth for the CRUD example).
+      Apex.Billing.Invoice.Store,
       # The in-memory search projection (Discovery's read model).
-      InMemory
+      InMemory,
+      # Subscribes to source events and projects them into the index.
+      EventSubscriber
     ]
 
     opts = [strategy: :one_for_one, name: Apex.Supervisor]
