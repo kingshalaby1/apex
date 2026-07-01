@@ -12,8 +12,10 @@ defmodule Apex.Application do
     children = [
       # Domain-event bus (shared infrastructure, owned by no context).
       {Registry, keys: :duplicate, name: Apex.EventBus.Registry},
-      # Billing's stateful invoice store (source of truth for the CRUD example).
+      # Each context's stateful store (source of truth; a Repo in production).
+      Apex.Account.TradingPartner.Store,
       Apex.Billing.Invoice.Store,
+      Apex.Remittance.PaymentRequest.Store,
       # The in-memory search projection (Discovery's read model).
       InMemory,
       # Subscribes to source events and projects them into the index.

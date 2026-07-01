@@ -93,9 +93,10 @@ dispatch* — simpler tests, but it would imply the write and index update are a
 contradicting eventual consistency. *Direct call from context to Indexer* — rejected
 outright (couples the contexts).
 
-**Scope.** Wired end-to-end on Billing/invoices as the worked example (create /
-update / delete → searchable); the pattern generalises to the other contexts
-verbatim.
+**Scope.** Wired end-to-end across all three source contexts — Billing (invoices),
+Account (trading partners) and Remittance (payment requests) — each with
+create/update/delete that persist to a stateful `Store` and publish events the
+search subscriber projects into the index.
 
 ## Assumptions (confirm in production)
 

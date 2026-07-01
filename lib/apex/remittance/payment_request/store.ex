@@ -1,12 +1,15 @@
 defmodule Apex.Remittance.PaymentRequest.Store do
   @moduledoc false
-  # In-memory stand-in for the Remittance datastore — the "table" of payment
-  # requests. Swap `all/0` for a real Repo query when persistence is introduced;
-  # the context (Apex.Remittance) is the only caller.
+  # Stateful in-memory stand-in for the Remittance datastore — the "table" of
+  # payment requests, held as `%{id => PaymentRequest}` in an Agent so it supports
+  # writes. Swap this for a real Repo when persistence is introduced; the context
+  # (Apex.Remittance) is the only caller.
+
+  use Agent
 
   alias Apex.Remittance.PaymentRequest
 
-  @records [
+  @seed [
     %PaymentRequest{
       id: "pr_111",
       business_id: "acme",
@@ -27,6 +30,19 @@ defmodule Apex.Remittance.PaymentRequest.Store do
     }
   ]
 
+  def start_link(_opts) do
+    Agent.start_link(fn -> Map.new(@seed, &{&1.id, &1}) end, name: __MODULE__)
+  end
+
   @spec all() :: [PaymentRequest.t()]
-  def all, do: @records
+  def all, do: Agent.get(__MODULE__, &Map.values/1)
+
+  @spec get(String.t()) :: PaymentRequest.t() | nil
+  def get(id), do: Agent.get(__MODULE__, &Map.get(&1, id))
+
+  @spec put(PaymentRequest.t()) :: :ok
+  def put(%PaymentRequest{} = pr), do: Agent.update(__MODULE__, &Map.put(&1, pr.id, pr))
+
+  @spec delete(String.t()) :: :ok
+  def delete(id), do: Agent.update(__MODULE__, &Map.delete(&1, id))
 end

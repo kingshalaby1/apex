@@ -1,12 +1,15 @@
 defmodule Apex.Account.TradingPartner.Store do
   @moduledoc false
-  # In-memory stand-in for the Account datastore — the "table" of trading
-  # partners. Swap `all/0` for a real Repo query when persistence is introduced;
-  # the context (Apex.Account) is the only caller.
+  # Stateful in-memory stand-in for the Account datastore — the "table" of trading
+  # partners, held as `%{id => TradingPartner}` in an Agent so it supports writes.
+  # Swap this for a real Repo when persistence is introduced; the context
+  # (Apex.Account) is the only caller.
+
+  use Agent
 
   alias Apex.Account.TradingPartner
 
-  @records [
+  @seed [
     %TradingPartner{
       id: "tp_1",
       business_id: "acme",
@@ -36,6 +39,19 @@ defmodule Apex.Account.TradingPartner.Store do
     }
   ]
 
+  def start_link(_opts) do
+    Agent.start_link(fn -> Map.new(@seed, &{&1.id, &1}) end, name: __MODULE__)
+  end
+
   @spec all() :: [TradingPartner.t()]
-  def all, do: @records
+  def all, do: Agent.get(__MODULE__, &Map.values/1)
+
+  @spec get(String.t()) :: TradingPartner.t() | nil
+  def get(id), do: Agent.get(__MODULE__, &Map.get(&1, id))
+
+  @spec put(TradingPartner.t()) :: :ok
+  def put(%TradingPartner{} = tp), do: Agent.update(__MODULE__, &Map.put(&1, tp.id, tp))
+
+  @spec delete(String.t()) :: :ok
+  def delete(id), do: Agent.update(__MODULE__, &Map.delete(&1, id))
 end

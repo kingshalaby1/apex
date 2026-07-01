@@ -66,12 +66,17 @@ Search.query(Scope.new(business_id: "acme", permissions: [:payments]), "INV-123"
 
 A context write publishes a domain event on `Apex.EventBus`; the search
 `EventSubscriber` projects it into the index — the context never calls search.
+All three source contexts expose `create_*` / `update_*` / `delete_*`.
 
 ```elixir
 Apex.Billing.create_invoice(%{id: "inv_9", business_id: "acme",
   number: "INV-9", partner_name: "Zephyr Trading", status: :draft})
 
 Search.query(scope, "Zephyr")   # the new invoice is now searchable (eventually)
+
+# Same pattern in the other contexts:
+Apex.Account.create_trading_partner(%{id: "tp_9", business_id: "acme", name: "Nimbus Partners"})
+Apex.Remittance.create_payment_request(%{id: "pr_9", business_id: "acme", number: "PR-9", payer_name: "Solara Group"})
 ```
 
 ## What the tests prove
