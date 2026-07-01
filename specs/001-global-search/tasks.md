@@ -28,8 +28,8 @@ upserts, fail-safe partial results).
 
 **Purpose**: Establish a known-green baseline before building the pipeline.
 
-- [ ] T001 Confirm baseline compiles and existing struct tests pass (`mix compile && mix test`)
-- [ ] T002 [P] Confirm formatting is clean (`mix format --check-formatted`)
+- [X] T001 Confirm baseline compiles and existing struct tests pass (`mix compile && mix test`)
+- [X] T002 [P] Confirm formatting is clean (`mix format --check-formatted`)
 
 ---
 
@@ -39,19 +39,19 @@ upserts, fail-safe partial results).
 
 **⚠️ CRITICAL**: No user story can be completed until this phase is done.
 
-- [ ] T003 [P] Define the `Source` behaviour (callbacks `source_key/0`, `group_label/0`, `type_weight/0`, `to_document/1`, `fetch_all/1`) in `lib/apex/discovery/search/source.ex` per `contracts/source.md`
-- [ ] T004 [P] Define the `Index` behaviour (callbacks `upsert/1`, `delete/1`, `query/3`) in `lib/apex/discovery/search/index.ex` per `contracts/index.md`
-- [ ] T005 [P] Implement `Normalizer.normalize/1` (downcase + Unicode NFKD + strip combining marks, folding Latin accents and Arabic diacritics) in `lib/apex/discovery/search/normalizer.ex`
-- [ ] T006 [P] Unit tests for `Normalizer` (English case/accents + Arabic diacritics fold symmetrically) in `test/apex/discovery/search/normalizer_test.exs`
-- [ ] T007 Implement the in-memory `Index` adapter as a supervised GenServer holding `%{id => Document}` with `upsert/1` (apply-if-newer on `source_version`), `delete/1`, and `query/3` (filter by `tenant_id` + `sources`, substring candidate match on normalized `search_terms`) in `lib/apex/discovery/search/index/in_memory.ex` (depends: T004)
-- [ ] T008 Unit tests for the in-memory index: apply-if-newer idempotency (older/equal/newer `source_version`), delete, and tenant/source candidate filtering in `test/apex/discovery/search/index_in_memory_test.exs` (depends: T007)
-- [ ] T009 [P] Implement the source `Registry` (map `source_key => module`, `all/0`, `fetch/1`) in `lib/apex/discovery/search/registry.ex` (depends: T003)
-- [ ] T010 [P] Implement the Trading Partners source (sample tp_1–tp_3, `required_permissions: []`, `to_document/1`, `fetch_all/1`) in `lib/apex/discovery/search/sources/trading_partners.ex` (depends: T003)
-- [ ] T011 [P] Implement the Invoices source (sample inv_123/inv_222/inv_999, `required_permissions: [:finance]`) in `lib/apex/discovery/search/sources/invoices.ex` (depends: T003)
-- [ ] T012 [P] Implement the Payment Requests source (sample pr_111/pr_222, `required_permissions: [:payments]`) in `lib/apex/discovery/search/sources/payment_requests.ex` (depends: T003)
-- [ ] T013 Implement the `Indexer` (`apply/1` for upsert/delete via `to_document` + `Index`; `reindex/1` backfill via `fetch_all` + upsert) in `lib/apex/discovery/search/indexer.ex` (depends: T007, T003)
-- [ ] T014 Unit tests for `Indexer`: backfill converges, and a stale replay cannot regress fresher state (apply-if-newer end-to-end) in `test/apex/discovery/search/indexer_test.exs` (depends: T013)
-- [ ] T015 Wire supervision: start the in-memory `Index` in `lib/apex/application.ex` and seed the sample data via `Indexer.reindex/1` for the registered sources (depends: T007, T009–T013)
+- [X] T003 [P] Define the `Source` behaviour (callbacks `source_key/0`, `group_label/0`, `type_weight/0`, `to_document/1`, `fetch_all/1`) in `lib/apex/discovery/search/source.ex` per `contracts/source.md`
+- [X] T004 [P] Define the `Index` behaviour (callbacks `upsert/1`, `delete/1`, `query/3`) in `lib/apex/discovery/search/index.ex` per `contracts/index.md`
+- [X] T005 [P] Implement `Normalizer.normalize/1` (downcase + Unicode NFKD + strip combining marks, folding Latin accents and Arabic diacritics) in `lib/apex/discovery/search/normalizer.ex`
+- [X] T006 [P] Unit tests for `Normalizer` (English case/accents + Arabic diacritics fold symmetrically) in `test/apex/discovery/search/normalizer_test.exs`
+- [X] T007 Implement the in-memory `Index` adapter as a supervised GenServer holding `%{id => Document}` with `upsert/1` (apply-if-newer on `source_version`), `delete/1`, and `query/3` (filter by `tenant_id` + `sources`, substring candidate match on normalized `search_terms`) in `lib/apex/discovery/search/index/in_memory.ex` (depends: T004)
+- [X] T008 Unit tests for the in-memory index: apply-if-newer idempotency (older/equal/newer `source_version`), delete, and tenant/source candidate filtering in `test/apex/discovery/search/index_in_memory_test.exs` (depends: T007)
+- [X] T009 [P] Implement the source `Registry` (map `source_key => module`, `all/0`, `fetch/1`) in `lib/apex/discovery/search/registry.ex` (depends: T003)
+- [X] T010 [P] Implement the Trading Partners source (sample tp_1–tp_3, `required_permissions: []`, `to_document/1`, `fetch_all/1`) in `lib/apex/discovery/search/sources/trading_partners.ex` (depends: T003)
+- [X] T011 [P] Implement the Invoices source (sample inv_123/inv_222/inv_999, `required_permissions: [:finance]`) in `lib/apex/discovery/search/sources/invoices.ex` (depends: T003)
+- [X] T012 [P] Implement the Payment Requests source (sample pr_111/pr_222, `required_permissions: [:payments]`) in `lib/apex/discovery/search/sources/payment_requests.ex` (depends: T003)
+- [X] T013 Implement the `Indexer` (`apply/1` for upsert/delete via `to_document` + `Index`; `reindex/1` backfill via `fetch_all` + upsert) in `lib/apex/discovery/search/indexer.ex` (depends: T007, T003)
+- [X] T014 Unit tests for `Indexer`: backfill converges, and a stale replay cannot regress fresher state (apply-if-newer end-to-end) in `test/apex/discovery/search/indexer_test.exs` (depends: T013)
+- [X] T015 Wire supervision: start the in-memory `Index` in `lib/apex/application.ex` and seed the sample data via `Indexer.reindex/1` for the registered sources (depends: T007, T009–T013)
 
 **Checkpoint**: Sample documents are indexed and retrievable by tenant + source.
 
@@ -67,15 +67,15 @@ Invoice and Payment Request results for `acme`; no `desert` records.
 
 ### Tests for User Story 1
 
-- [ ] T016 [P] [US1] Integration test: acme "Gulf" returns labelled groups (Trading Partners, Invoices, Payment Requests) with acme records only; desert tp_3/inv_999 excluded (spec scenarios 1–2) in `test/apex/discovery/search/search_test.exs`
+- [X] T016 [P] [US1] Integration test: acme "Gulf" returns labelled groups (Trading Partners, Invoices, Payment Requests) with acme records only; desert tp_3/inv_999 excluded (spec scenarios 1–2) in `test/apex/discovery/search/search_test.exs`
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Implement `Authorizer.filter/2` tenant stage: drop any document whose `tenant_id != scope.business_id` in `lib/apex/discovery/search/authorizer.ex`
-- [ ] T018 [US1] Implement `Ranker` basic relevance + `Result` projection (per-field match strength, `matched_fields`, normalized `score`) in `lib/apex/discovery/search/ranker.ex`
-- [ ] T019 [US1] Implement `Grouper` (bucket by `source`, order groups by fixed source priority/`type_weight`, attach `group_label`, apply per-group cap 5 and overall limit 10) in `lib/apex/discovery/search/grouper.ex`
-- [ ] T020 [US1] Implement `Search.query/3` orchestration (require scope, normalize query, resolve sources via Registry, retrieve candidates, tenant-authorize → rank → group, assemble `Response` with `meta`) in `lib/apex/discovery/search.ex`
-- [ ] T021 [US1] Handle empty/blank query → well-formed empty `Response` (edge case) in `lib/apex/discovery/search.ex`
+- [X] T017 [US1] Implement `Authorizer.filter/2` tenant stage: drop any document whose `tenant_id != scope.business_id` in `lib/apex/discovery/search/authorizer.ex`
+- [X] T018 [US1] Implement `Ranker` basic relevance + `Result` projection (per-field match strength, `matched_fields`, normalized `score`) in `lib/apex/discovery/search/ranker.ex`
+- [X] T019 [US1] Implement `Grouper` (bucket by `source`, order groups by fixed source priority/`type_weight`, attach `group_label`, apply per-group cap 5 and overall limit 10) in `lib/apex/discovery/search/grouper.ex`
+- [X] T020 [US1] Implement `Search.query/3` orchestration (require scope, normalize query, resolve sources via Registry, retrieve candidates, tenant-authorize → rank → group, assemble `Response` with `meta`) in `lib/apex/discovery/search.ex`
+- [X] T021 [US1] Handle empty/blank query → well-formed empty `Response` (edge case) in `lib/apex/discovery/search.ex`
 
 **Checkpoint**: US1 is a working MVP — grouped, tenant-safe search.
 
@@ -90,12 +90,12 @@ invoice is absent; without `:payments`, no Payment Request results appear.
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Integration test: no-finance user → invoices omitted; no-payments user → payment requests omitted; finance user → invoices present (spec scenarios 3–4) in `test/apex/discovery/search/authorizer_test.exs`
+- [X] T022 [P] [US2] Integration test: no-finance user → invoices omitted; no-payments user → payment requests omitted; finance user → invoices present (spec scenarios 3–4) in `test/apex/discovery/search/authorizer_test.exs`
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Extend `Authorizer` with the permission stage: omit any document whose `required_permissions` are not all held by the scope (`Scope.permits?/2`) in `lib/apex/discovery/search/authorizer.ex`
-- [ ] T024 [US2] Ensure `Search.query/3` applies the permission stage after the tenant stage in `lib/apex/discovery/search.ex`
+- [X] T023 [US2] Extend `Authorizer` with the permission stage: omit any document whose `required_permissions` are not all held by the scope (`Scope.permits?/2`) in `lib/apex/discovery/search/authorizer.ex`
+- [X] T024 [US2] Ensure `Search.query/3` applies the permission stage after the tenant stage in `lib/apex/discovery/search.ex`
 
 **Checkpoint**: US1 + US2 — tenant-safe and permission-safe results.
 
@@ -110,12 +110,12 @@ top result, above trading-partner "Gulf" matches.
 
 ### Tests for User Story 3
 
-- [ ] T025 [P] [US3] Unit test: exact identifier ("INV-123") outranks name matches; equal relevance → newer `updated_at` wins (spec scenario 5) in `test/apex/discovery/search/ranker_test.exs`
+- [X] T025 [P] [US3] Unit test: exact identifier ("INV-123") outranks name matches; equal relevance → newer `updated_at` wins (spec scenario 5) in `test/apex/discovery/search/ranker_test.exs`
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Enhance `Ranker` with layered ordering (exact-identifier band > text relevance > `type_weight` > recency) in `lib/apex/discovery/search/ranker.ex`
-- [ ] T027 [US3] Wire the enhanced ranking into `Search.query/3` result ordering in `lib/apex/discovery/search.ex`
+- [X] T026 [US3] Enhance `Ranker` with layered ordering (exact-identifier band > text relevance > `type_weight` > recency) in `lib/apex/discovery/search/ranker.ex`
+- [X] T027 [US3] Wire the enhanced ranking into `Search.query/3` result ordering in `lib/apex/discovery/search.ex`
 
 **Checkpoint**: Results are usefully ordered, exact-id first.
 
@@ -130,11 +130,11 @@ Trading Partner results.
 
 ### Tests for User Story 4
 
-- [ ] T028 [P] [US4] Integration test: `sources: [:trading_partners]` returns only Trading Partners; an unknown source is handled per the fail-safe policy, not a crash (spec scenario 6) in `test/apex/discovery/search/search_test.exs`
+- [X] T028 [P] [US4] Integration test: `sources: [:trading_partners]` returns only Trading Partners; an unknown source is handled per the fail-safe policy, not a crash (spec scenario 6) in `test/apex/discovery/search/search_test.exs`
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Enforce the `:sources` option when resolving sources (Registry lookup + validation) so only requested, known sources are queried in `lib/apex/discovery/search.ex`
+- [X] T029 [US4] Enforce the `:sources` option when resolving sources (Registry lookup + validation) so only requested, known sources are queried in `lib/apex/discovery/search.ex`
 
 **Checkpoint**: Scoped, filterable search.
 
@@ -150,11 +150,11 @@ Partner + Invoice groups still returned; `degraded? == true`, `errors` names
 
 ### Tests for User Story 5
 
-- [ ] T030 [P] [US5] Integration test: inject a failing source; healthy groups still return, `degraded? == true`, `errors` records the failed source (spec scenario 7) in `test/apex/discovery/search/search_test.exs`
+- [X] T030 [P] [US5] Integration test: inject a failing source; healthy groups still return, `degraded? == true`, `errors` records the failed source (spec scenario 7) in `test/apex/discovery/search/search_test.exs`
 
 ### Implementation for User Story 5
 
-- [ ] T031 [US5] Implement per-source isolated retrieval in `Search.query/3`: wrap each source's retrieval so a failure is captured into `errors` and sets `degraded?`, while healthy sources proceed in `lib/apex/discovery/search.ex`
+- [X] T031 [US5] Implement per-source isolated retrieval in `Search.query/3`: wrap each source's retrieval so a failure is captured into `errors` and sets `degraded?`, while healthy sources proceed in `lib/apex/discovery/search.ex`
 
 **Checkpoint**: All five stories functional and independently testable.
 
@@ -162,11 +162,11 @@ Partner + Invoice groups still returned; `degraded? == true`, `errors` names
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T032 [P] Add the observability seam: generate/propagate a correlation id, emit telemetry-style query events (count, duration, degraded) and an audit event for sensitive searches in `lib/apex/discovery/search/telemetry.ex` (wired from `Search.query/3`)
-- [ ] T033 [P] Author `ARCHITECTURE.md` at the repo root (assumptions, goals/non-goals, boundaries, components, contracts, data model, indexing/query flow, security, consistency, observability, testing, rollout) drawing from spec.md/plan.md/research.md
-- [ ] T034 [P] Author `DECISIONS.md` at the repo root (trade-offs, rejected alternatives, assumptions, intentional timebox shortcuts, next steps)
-- [ ] T035 Update `README.md` at the repo root (what it is, how to run, how to test, sample IEx query)
-- [ ] T036 Run the `quickstart.md` validation (all 7 scenarios) and confirm `mix test` is green
+- [X] T032 [P] Add the observability seam: generate/propagate a correlation id, emit telemetry-style query events (count, duration, degraded) and an audit event for sensitive searches in `lib/apex/discovery/search/telemetry.ex` (wired from `Search.query/3`)
+- [X] T033 [P] Author `ARCHITECTURE.md` at the repo root (assumptions, goals/non-goals, boundaries, components, contracts, data model, indexing/query flow, security, consistency, observability, testing, rollout) drawing from spec.md/plan.md/research.md
+- [X] T034 [P] Author `DECISIONS.md` at the repo root (trade-offs, rejected alternatives, assumptions, intentional timebox shortcuts, next steps)
+- [X] T035 Update `README.md` at the repo root (what it is, how to run, how to test, sample IEx query)
+- [X] T036 Run the `quickstart.md` validation (all 7 scenarios) and confirm `mix test` is green
 
 ---
 

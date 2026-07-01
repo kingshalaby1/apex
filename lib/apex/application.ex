@@ -5,16 +5,22 @@ defmodule Apex.Application do
 
   use Application
 
+  alias Apex.Discovery.Search.{Index.InMemory, Indexer}
+
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Apex.Worker.start_link(arg)
-      # {Apex.Worker, arg}
+      # The in-memory search projection (Discovery's read model).
+      InMemory
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Apex.Supervisor]
-    Supervisor.start_link(children, opts)
+    {:ok, pid} = Supervisor.start_link(children, opts)
+
+    # Backfill the sample data into the projection (skeleton seeding). In a real
+    # system this is a deploy-time backfill; live events keep it fresh thereafter.
+    Indexer.seed()
+
+    {:ok, pid}
   end
 end
