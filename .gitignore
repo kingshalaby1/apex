@@ -21,3 +21,10 @@ apex-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# JetBrains IDE files.
+/.idea/
+*.iml
+
+# macOS.
+.DS_Store
