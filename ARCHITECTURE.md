@@ -244,3 +244,33 @@ sample-data end-to-end tests. `quickstart.md` maps every scenario to a test.
 
 Each step is shippable and reversible; the public API and contracts stay stable
 throughout.
+
+## 14. Evolution — search backends
+
+The `Index` behaviour is the seam that makes the storage engine a swap, not a
+rewrite. The intended progression, cheapest first:
+
+| Stage | Backend | When |
+|-------|---------|------|
+| now | **In-memory** (GenServer) | skeleton / tests |
+| next | **Postgres full-text** (`tsvector` + `GIN`) | moderate per-tenant scale; **no new infrastructure**, tenant filter sits in a `WHERE` next to trusted data |
+| later | **Elasticsearch / OpenSearch** | proper **Arabic/English analysis**, typeahead, cross-tenant scale, or relevance tuning Postgres can't provide |
+| beyond | **Hybrid / vector (AI retrieval)** | semantic search — a `Document` gains an embedding; combine keyword + vector scores |
+
+**Elasticsearch / OpenSearch** (the Apache-licensed fork) is a strong *eventual*
+fit and implements the same `Index` behaviour with no pipeline change. Its real
+payoff for this domain is **linguistic analysis** (Arabic normalisation of
+alef/hamza/diacritics, stemming, ICU folding) and typeahead — not just "search".
+Three rules if/when adopted:
+
+- **Tenant + permission filters must be injected on every query** and wrapped so an
+  un-scoped query is impossible to issue — the engine has no notion of `business_id`
+  or `:finance`, and a missed filter is a cross-tenant leak.
+- **Only the scope-safe `Document` is indexed** (already true), so raw records never
+  leave the owning context; the cluster still needs encryption, isolation and audit.
+- **Still never a source of truth** — near-real-time refresh reinforces Principle II.
+
+Our **per-source, isolated retrieval** maps cleanly onto an external engine (one
+query per source, or a multi-search), keeping grouping, omit-on-deny authorisation
+and fail-safe partials on our side where they stay testable — the engine is used
+purely as the matcher/ranker.
