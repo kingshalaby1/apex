@@ -84,8 +84,10 @@ input.
 
 ## Intentional timebox shortcuts
 
-- **In-memory index + in-process sample sources** instead of a database and real
-  context APIs — enough to prove the pipeline and every invariant.
+- **In-memory index + in-process sample data** instead of a database — each source
+  context (Account/Billing/Remittance) owns its model and a public read API
+  (`list_*`), and the search adapters map + delegate to it; only the underlying
+  data store is stubbed with in-process sample records.
 - **Sequential per-source retrieval** rather than concurrent `Task` fan-out with
   timeouts (the production shape) — clearer, and the fail-safe seam is the same.
 - **Logger-based telemetry seam** rather than wiring `:telemetry` and an audit sink.

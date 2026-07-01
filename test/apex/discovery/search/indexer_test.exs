@@ -48,7 +48,7 @@ defmodule Apex.Discovery.Search.IndexerTest do
   end
 
   test "apply/2 handles upsert and delete events", %{ix: ix} do
-    record = %{
+    record = %Apex.Billing.Invoice{
       id: "inv_123",
       business_id: "acme",
       number: "INV-123",

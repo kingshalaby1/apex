@@ -2,44 +2,18 @@ defmodule Apex.Discovery.Search.Sources.Invoices do
   @moduledoc """
   Search source adapter for the Billing context's invoices.
 
-  Invoices are sensitive financial documents: `required_permissions` is
-  `[:finance]`, and only scope-safe snippet fields are exposed. Holds the sample
-  data for the skeleton.
+  The adapter is the seam between Billing and search: it pulls records from
+  Billing's **public API** (`Apex.Billing.list_invoices/1`) for backfill and maps
+  a `Apex.Billing.Invoice` into a neutral, scope-safe `Document`. The invoice data
+  itself lives in Billing, not here. Invoices are sensitive, so
+  `required_permissions` is `[:finance]` and only scope-safe fields are exposed.
   """
 
   @behaviour Apex.Discovery.Search.Source
 
+  alias Apex.Billing
+  alias Apex.Billing.Invoice
   alias Apex.Discovery.Search.Document
-
-  @records [
-    %{
-      id: "inv_123",
-      business_id: "acme",
-      number: "INV-123",
-      partner_name: "Gulf Trading",
-      status: :overdue,
-      version: 1,
-      updated_at: ~U[2026-06-10 09:00:00Z]
-    },
-    %{
-      id: "inv_222",
-      business_id: "acme",
-      number: "INV-222",
-      partner_name: "Gulf Trading",
-      status: :paid,
-      version: 1,
-      updated_at: ~U[2026-06-20 09:00:00Z]
-    },
-    %{
-      id: "inv_999",
-      business_id: "desert",
-      number: "INV-999",
-      partner_name: "Gulf Trading",
-      status: :overdue,
-      version: 1,
-      updated_at: ~U[2026-06-15 09:00:00Z]
-    }
-  ]
 
   @impl true
   def source_key, do: :invoices
@@ -51,22 +25,25 @@ defmodule Apex.Discovery.Search.Sources.Invoices do
   def type_weight, do: 0.8
 
   @impl true
-  def to_document(inv) do
+  def to_document(%Invoice{} = invoice) do
     Document.new(
-      id: "invoice:#{inv.id}",
+      id: "invoice:#{invoice.id}",
       source: :invoices,
-      tenant_id: inv.business_id,
+      tenant_id: invoice.business_id,
       required_permissions: [:finance],
-      title: inv.number,
-      subtitle: inv.partner_name,
-      search_terms: %{invoice_number: inv.number, trading_partner_name: inv.partner_name},
-      metadata: %{status: inv.status},
-      url: "/business/#{inv.business_id}/invoices/#{inv.id}",
-      updated_at: inv.updated_at,
-      source_version: inv.version
+      title: invoice.number,
+      subtitle: invoice.partner_name,
+      search_terms: %{
+        invoice_number: invoice.number,
+        trading_partner_name: invoice.partner_name
+      },
+      metadata: %{status: invoice.status},
+      url: "/business/#{invoice.business_id}/invoices/#{invoice.id}",
+      updated_at: invoice.updated_at,
+      source_version: invoice.version
     )
   end
 
   @impl true
-  def fetch_all(tenant_id), do: Enum.filter(@records, &(&1.business_id == tenant_id))
+  def fetch_all(tenant_id), do: Billing.list_invoices(tenant_id)
 end

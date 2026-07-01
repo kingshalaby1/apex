@@ -75,6 +75,12 @@ serves queries over that index. Discovery reads **only its own projection** —
 never another context's tables, never the Ledger. This keeps every context
 independently extractable (constitution Principle I).
 
+Each source context **owns its domain model and a public read API** (e.g.
+`Apex.Billing.Invoice` + `Apex.Billing.list_invoices/1`). The corresponding search
+**source adapter** (`Discovery.Search.Sources.*`) is the only code that spans both
+sides: it maps a context record into a `Document` (`to_document/1`) and calls the
+context's public API for backfill (`fetch_all/1`). The adapter holds no data.
+
 ## 4. Components
 
 All under `lib/apex/discovery/search/`.
@@ -213,8 +219,9 @@ sample-data end-to-end tests. `quickstart.md` maps every scenario to a test.
 ## 13. Rollout plan
 
 1. **Skeleton (here)** — in-memory index, three sources, full pipeline + tests.
-2. **Wire real sources** — implement `Source` adapters in Account/Billing/Remittance
-   over their public read APIs; keep the sample sources as fixtures.
+2. **Back the contexts with real data** — the `Source` adapters already call each
+   context's public read API (`list_*`); swap the in-process sample data in
+   Account/Billing/Remittance for the real datastore.
 3. **Event ingestion** — subscribe the `Indexer` to the domain-event bus with
    retries + dead-letter; add deploy-time backfill.
 4. **Durable index** — implement the `Index` behaviour over Postgres full-text
