@@ -85,9 +85,10 @@ input.
 ## Intentional timebox shortcuts
 
 - **In-memory index + in-process sample data** instead of a database — each source
-  context (Account/Billing/Remittance) owns its model and a public read API
-  (`list_*`), and the search adapters map + delegate to it; only the underlying
-  data store is stubbed with in-process sample records.
+  context (Account/Billing/Remittance) exposes a public read API (`list_*`) backed
+  by a `*.Store` module (e.g. `Apex.Billing.Invoice.Store`) that stands in for the
+  datastore. The model stays a pure struct; swapping the `Store` for a real Repo
+  query is a one-module change that leaves the context API and search untouched.
 - **Sequential per-source retrieval** rather than concurrent `Task` fan-out with
   timeouts (the production shape) — clearer, and the fail-safe seam is the same.
 - **Logger-based telemetry seam** rather than wiring `:telemetry` and an audit sink.

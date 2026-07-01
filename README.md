@@ -80,14 +80,17 @@ convention): the module is the public front door, its models live in the folder.
 
 ```
 lib/apex/
-  account.ex               # Apex.Account — public read API (list_trading_partners/1)
-  account/trading_partner.ex   # Apex.Account.TradingPartner (model / source of truth)
-  billing.ex               # Apex.Billing — list_invoices/1
-  billing/invoice.ex       # Apex.Billing.Invoice
-  remittance.ex            # Apex.Remittance — list_payment_requests/1
-  remittance/payment_request.ex  # Apex.Remittance.PaymentRequest
-  ledger.ex                # Apex.Ledger — search-deferred (non-goal)
-  discovery.ex             # Apex.Discovery — owns search
+  account.ex                          # Apex.Account — public read API (list_trading_partners/1)
+  account/trading_partner.ex          # Apex.Account.TradingPartner (pure struct / model)
+  account/trading_partner/store.ex    # datastore stand-in (sample rows; a Repo later)
+  billing.ex                          # Apex.Billing — list_invoices/1
+  billing/invoice.ex                  # Apex.Billing.Invoice
+  billing/invoice/store.ex            # datastore stand-in
+  remittance.ex                       # Apex.Remittance — list_payment_requests/1
+  remittance/payment_request.ex       # Apex.Remittance.PaymentRequest
+  remittance/payment_request/store.ex # datastore stand-in
+  ledger.ex                           # Apex.Ledger — search-deferred (non-goal)
+  discovery.ex                        # Apex.Discovery — owns search
   discovery/search/
     search.ex              # public API: query/3
     scope.ex document.ex result.ex group.ex response.ex   # neutral shapes
