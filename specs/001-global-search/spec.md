@@ -8,6 +8,14 @@
 
 **Input**: User description: "Global search for Apex — a single search bar at the top of the app where a business user types a phrase (e.g. \"Gulf\") and gets useful, grouped results across multiple business objects: Trading Partners, Invoices, and Payment Requests (with more source types added later without reworking the system)."
 
+## Clarifications
+
+### Session 2026-07-01
+
+- Q: When a user lacks permission for an object type, how are matching results handled? → A: **Omit entirely** — unauthorized results are absent from the response (no redacted stub or count).
+- Q: In what order do result groups appear? → A: **Fixed source priority** by object-type weight (e.g. Trading Partners, Invoices, Payment Requests), independent of per-query scores.
+- Q: What default result limits apply when the caller does not specify one? → A: **Overall limit 10, per-group cap 5.**
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Find records across object types from one search bar (Priority: P1)
@@ -175,7 +183,8 @@ indicates a degraded state naming the failed source.
 - **FR-004**: The system MUST NOT run a search without a business scope (no
   untenanted queries).
 - **FR-005**: The system MUST enforce permission gating per object type: results
-  the caller is not permitted to see MUST be omitted or safely redacted.
+  the caller is not permitted to see MUST be **omitted entirely** from the
+  response — no redacted stub, count, or other trace of their existence.
 - **FR-006**: Result snippets MUST expose only fields that are safe for the
   caller's scope; private or internal-only data MUST NOT appear.
 - **FR-007**: An exact match on a record's identifier MUST rank above loose text
@@ -183,7 +192,8 @@ indicates a degraded state naming the failed source.
 - **FR-008**: Ranking MUST combine exact-identifier matches, text relevance,
   object-type weighting, and recency into a single ordering.
 - **FR-009**: The system MUST bound results by a per-group cap and an overall
-  limit.
+  limit, defaulting to an **overall limit of 10 and a per-group cap of 5** when
+  the caller does not specify a limit.
 - **FR-010**: The system MUST allow a search to be restricted to a specified
   subset of object types.
 - **FR-011**: The system MUST treat search as read-only over a derived view and
@@ -204,6 +214,9 @@ indicates a degraded state naming the failed source.
 - **FR-017**: A new searchable object type MUST be able to join the search without
   changing the behaviour of existing searches or the shared query/ranking/grouping
   logic.
+- **FR-018**: Result groups MUST be ordered by a fixed source priority
+  (object-type weight) that is independent of per-query scores, so group ordering
+  is deterministic.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -259,9 +272,9 @@ indicates a degraded state naming the failed source.
   role-style permission set (e.g. finance, payments), which fully satisfies the
   sample data. Fine-grained per-record access control lists are a non-goal for v1
   and would require product/security confirmation.
-- **Redaction policy**: when a user lacks permission for an object type, matching
-  results are **omitted** from the response in v1 (rather than shown as redacted
-  stubs). The alternative (a "you have N results you can't view" stub) is deferred.
+- **Redaction policy** *(confirmed 2026-07-01)*: when a user lacks permission for
+  an object type, matching results are **omitted entirely** from the response in
+  v1 (no redacted stub or count). The stub alternative is deferred.
 - **Ledger out of scope for v1**: ledger entries are excluded from global search
   because they have no human-searchable name, are the most sensitive financial
   data, and using a slightly-stale search view as financial truth is unacceptable.
