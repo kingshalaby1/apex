@@ -75,23 +75,28 @@ Search.query(Scope.new(business_id: "acme", permissions: [:payments]), "INV-123"
 
 ## Layout
 
+Each context module is a file next to its own directory (Elixir/Phoenix
+convention): the module is the public front door, its models live in the folder.
+
 ```
 lib/apex/
-  account/     account.ex trading_partner.ex      # owns TP data + list_trading_partners/1
-  billing/     billing.ex invoice.ex              # owns invoice data + list_invoices/1
-  remittance/  remittance.ex payment_request.ex   # owns PR data + list_payment_requests/1
-  ledger/      ledger.ex                          # search-deferred (non-goal)
-  discovery/
-    discovery.ex                                  # context facade (owns search)
-    search/
-      search.ex          # public API: query/3
-      scope.ex document.ex result.ex group.ex response.ex   # neutral shapes
-      source.ex index.ex # reusability contracts (behaviours)
-      index/in_memory.ex # swappable in-memory index adapter
-      registry.ex indexer.ex normalizer.ex        # projection + i18n
-      authorizer.ex ranker.ex grouper.ex telemetry.ex        # query pipeline
-      sources/           # adapters: map a context model -> Document, fetch_all -> context API
-specs/001-global-search/ # spec, plan, research, data-model, contracts, quickstart, tasks
+  account.ex               # Apex.Account — public read API (list_trading_partners/1)
+  account/trading_partner.ex   # Apex.Account.TradingPartner (model / source of truth)
+  billing.ex               # Apex.Billing — list_invoices/1
+  billing/invoice.ex       # Apex.Billing.Invoice
+  remittance.ex            # Apex.Remittance — list_payment_requests/1
+  remittance/payment_request.ex  # Apex.Remittance.PaymentRequest
+  ledger.ex                # Apex.Ledger — search-deferred (non-goal)
+  discovery.ex             # Apex.Discovery — owns search
+  discovery/search/
+    search.ex              # public API: query/3
+    scope.ex document.ex result.ex group.ex response.ex   # neutral shapes
+    source.ex index.ex     # reusability contracts (behaviours)
+    index/in_memory.ex     # swappable in-memory index adapter
+    registry.ex indexer.ex normalizer.ex                  # projection + i18n
+    authorizer.ex ranker.ex grouper.ex telemetry.ex       # query pipeline
+    sources/               # adapters: map a context model -> Document, fetch_all -> context API
+specs/001-global-search/   # spec, plan, research, data-model, contracts, quickstart, tasks
 ```
 
 Each **source context owns its data and a public read API** (`list_*`); the
